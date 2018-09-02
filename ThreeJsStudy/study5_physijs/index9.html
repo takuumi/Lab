@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html>
+<meta charset = "UTF-8">
+<head>
+
+<title>パラレルリンクロボット</title>
+
+<script type="text/javascript" src="../lib/three.js"></script>
+<script type="text/javascript" src="../lib/physi.js"></script>
+<script type="text/javascript" src="../lib/dat.gui.js"></script>
+<script type="text/javascript" src="../lib/OrbitControls.js"></script>
+<script type="text/javascript">
+
+'use strict';
+
+Physijs.scripts.worker = '../lib/physijs_worker.js';
+Physijs.scripts.ammo = '../lib/ammo.js';
+
+var initScene, render, ceiling_material, renderer, scene, ceiling, light, camera, orbitControls = [];
+var arm1PivotHeight = 10;
+var arm1InitPositionX = 4;
+var arm1InitPositionZ = arm1InitPositionX * 2 * Math.cos(Math.PI/6);
+
+var arm1Len = arm1InitPositionZ/2;  
+var arm1width = 0.5;
+var arm2Len = arm1Len*Math.sqrt(2);
+var arm2width = 0.5;
+var arm1PivotLen = 0.25;
+var arm2PivotLen = 0.25;
+
+
+
+var ceilingHeight = arm1PivotHeight + 1;
+
+
+initScene = function () {
+    //renderer
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    renderer.setClearColorHex(0x000000);
+    renderer.shadowMapEnabled = true;
+
+    document.getElementById('viewport').appendChild(renderer.domElement);
+
+    //scene
+    scene = new Physijs.Scene({reportSize: 10, fixedTimeStep: 1 / 60});
+    scene.setGravity(new THREE.Vector3(0, -10, 0));
+
+    //camera
+    camera = new THREE.PerspectiveCamera(
+            45,
+            window.innerWidth / window.innerHeight,
+            1,
+            1000
+    );
+    camera.position.set(15, 5, 30);
+    camera.lookAt(new THREE.Vector3(0, ceilingHeight, 0));
+    scene.add(camera);
+
+    // light
+    var light1 = new THREE.DirectionalLight(0xffffff, 0.5);
+    light1.position.set(0, -1, 1);
+    scene.add(light1);
+
+    var light2 = new THREE.DirectionalLight(0xffffff, 0.5);
+    light2.position.set(1, -1, 0);
+    scene.add(light2);
+
+    var light3 = new THREE.DirectionalLight(0xffffff, 1);
+    light3.position.set(-1, 0, 1);
+    scene.add(light3);
+
+    var light4 = new THREE.DirectionalLight(0xffffff, 1);
+    light4.position.set(1, 0, -1);
+    scene.add(light4);
+
+    // helper
+    var axis = new THREE.AxisHelper(1000);
+    axis.position.set(0,0,0);
+    scene.add(axis);
+
+                
+    // control
+    orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
+
+    //object
+    createCeiling();
+
+    // X軸用
+    var coneTwistConstraintXArm1 = createConeTwistXArm1();
+    var coneTwistConstraintXArm2 = createConeTwistXArm2();
+    var point2pointX = createPointToPointX(true);
+
+    // MinusX軸用
+    var coneTwistConstraintMinusXArm1 = createConeTwistMinusXArm1();
+    var coneTwistConstraintMinusXArm2 = createConeTwistMinusXArm2();
+    var point2pointMinusX = createPointToPointMinusX(true);
+
+    // Z軸用
+    var coneTwistConstraintZArm1 = createConeTwistZArm1();
+    var coneTwistConstraintZArm2 = createConeTwistZArm2();
+    var point2pointZ = createPointToPointZ(true);
+
+    // MovePoint用
+    var MovePoint = createMovePoint();
+
+    var controls = new function () {
+        this.motorTargetX1 = 0;
+        this.motorTargetZ1 = 0;
+
+        this.updateCone1 = function () {
+            coneTwistConstraintXArm1.enableMotor();
+                coneTwistConstraintXArm1.setMotorTarget(new THREE.Vector3(controls.motorTargetX1 * (Math.PI / 2) / 90, 
+                                                                      0, 
+                                                                      controls.motorTargetZ1 * (Math.PI / 2) / 90));
+        }
+    }
+
+    // GUI
+    var gui = new dat.GUI();
+
+    var coneTwistFolder1 = gui.addFolder('coneTwist1');
+    coneTwistFolder1.add(controls, "motorTargetX1", -90, 90).onChange(controls.updateCone1);
+    coneTwistFolder1.add(controls, "motorTargetZ1", -90, 90).onChange(controls.updateCone1);
+
+    requestAnimationFrame(render);
+    scene.simulate();
+};
+
+function createCeiling() {
+    // Materials
+    ceiling_material = Physijs.createMaterial(
+            new THREE.MeshPhongMaterial(
+                    {
+                        map: THREE.ImageUtils.loadTexture('images/wood.jpg')
+                    }),
+            .9, // high friction
+            .7 // low restitution
+    );
+
+    // Ceiling
+    ceiling = new Physijs.BoxMesh(
+            new THREE.CubeGeometry(60, 1, 60),
+            ceiling_material,
+            0
+    );
+    ceiling.receiveShadow = true;
+    ceiling.position.y = ceilingHeight;
+    scene.add(ceiling);
+}
+
+
+// X軸用のデータ生成
+var Xarm1, Xarm1pivot = [];
+function createConeTwistXArm1() {
+    var pivotMesh = new THREE.SphereGeometry(arm1PivotLen);
+    var pivotMaterial = new THREE.MeshPhongMaterial({opacity: 0.7, transparent: true, map: THREE.ImageUtils.loadTexture('images/metal.jpg')});
+
+    Xarm1pivot = new Physijs.SphereMesh(pivotMesh, Physijs.createMaterial(pivotMaterial), 0);
+    Xarm1pivot.position.x = arm1InitPositionX;
+    Xarm1pivot.position.y = arm1PivotHeight;
+    Xarm1pivot.position.z = 0;
+    Xarm1pivot.castShadow = true;
+    scene.add(Xarm1pivot);
+
+    var armMesh = new THREE.CubeGeometry(arm1width, arm1Len, arm1width);
+    var armMaterial = new THREE.MeshPhongMaterial({opacity: 0.7, transparent: true, map: THREE.ImageUtils.loadTexture('images/metal.jpg')});
+
+    Xarm1 = new Physijs.BoxMesh(armMesh, Physijs.createMaterial(armMaterial));
+    Xarm1.position.x = arm1InitPositionX;
+    Xarm1.position.y = arm1PivotHeight - arm1Len/2 - arm1PivotLen;
+    Xarm1.position.z = 0;
+    scene.add(Xarm1);
+
+    Xarm1pivot.castShadow = true;
+
+    //position is the position of the axis, relative to the ref, based on the current position
+    var constraint = new Physijs.ConeTwistConstraint(Xarm1pivot, Xarm1, Xarm1pivot.position);
+
+    scene.addConstraint(constraint);
+    constraint.setLimit(Math.PI, Math.PI, Math.PI);
+    constraint.setMaxMotorImpulse(1000);
+    constraint.setMotorTarget(new THREE.Vector3(0, 0, 0)); // desired rotation
+
+    return constraint;
+}
+
+var Xarm2, Xarm2pivot = [];
+function createConeTwistXArm2() {
+    var pivotMesh = new THREE.SphereGeometry(arm1PivotLen);
+    var pivotMaterial = new THREE.MeshPhongMaterial({opacity: 0.7, transparent: true, map: THREE.ImageUtils.loadTexture('images/metal.jpg')});
+
+    Xarm2pivot = new Physijs.SphereMesh(pivotMesh, Physijs.createMaterial(pivotMaterial));
+    Xarm2pivot.position.z = 0;
+    Xarm2pivot.position.x = arm1InitPositionX;
+    Xarm2pivot.position.y = arm1PivotHeight - arm1Len - arm1PivotLen - arm2PivotLen;
+    Xarm2pivot.castShadow = true;
+    scene.add(Xarm2pivot);
+
+    var armMesh = new THREE.CubeGeometry(arm2width, arm2Len, arm2width);
+    var armMaterial = new THREE.MeshPhongMaterial({opacity: 0.7, transparent: true, map: THREE.ImageUtils.loadTexture('images/metal.jpg')});
+
+    Xarm2 = new Physijs.BoxMesh(armMesh, Physijs.createMaterial(armMaterial));
+    Xarm2.position.z = 0;
+    Xarm2.position.x = arm1InitPositionX;
+    Xarm2.position.y = Xarm2pivot.position.y - arm2Len/2 - arm2PivotLen;
+    scene.add(Xarm2);
+
+    Xarm2pivot.castShadow = true;
+
+    //position is the position of the axis, relative to the ref, based on the current position
+    var constraint = new Physijs.ConeTwistConstraint(Xarm2pivot, Xarm2, Xarm2pivot.position);
+
+    scene.addConstraint(constraint);
+    // set limit to quarter circle for each axis
+    // constraint.setLimit(0.5 * Math.PI, 0.5 * Math.PI, 0.5 * Math.PI);
+    // ###mada 単位、Impluseの意味わからず。また、インプットが角度となっている。
+    constraint.setLimit(Math.PI, Math.PI, Math.PI);
+    constraint.setMaxMotorImpulse(1000);
+    constraint.setMotorTarget(new THREE.Vector3(0, 0, 0)); // desired rotation
+
+    return constraint;
+}
+
+function createPointToPointX() {
+    // if no position two, its fixed to a position. Else fixed to objectTwo and both will move
+    //var constraint = new Physijs.PointConstraint(objectOne, objectTwo, objectTwo.position);
+    //###mada こんなんでいいのだろうか？
+    var arm1Clone = Xarm1.clone();
+    arm1Clone.position.y = arm1Clone.position.y - arm1Len/2;
+    // var constraint = new Physijs.PointConstraint(Xarm1, Xarm2pivot, Xarm1.position);
+    var constraint = new Physijs.PointConstraint(Xarm1, Xarm2pivot, arm1Clone.position);
+    scene.addConstraint(constraint);
+}
+
+
+// MinusX軸用のデータ生成
+var MinusXarm1, MinusXarm1pivot = [];
+function createConeTwistMinusXArm1() {
+    var pivotMesh = new THREE.SphereGeometry(arm1PivotLen);
+    var pivotMaterial = new THREE.MeshPhongMaterial({opacity: 0.7, transparent: true, map: THREE.ImageUtils.loadTexture('images/metal.jpg')});
+
+    MinusXarm1pivot = new Physijs.SphereMesh(pivotMesh, Physijs.createMaterial(pivotMaterial), 0);
+    MinusXarm1pivot.position.x = -arm1InitPositionX;
+    MinusXarm1pivot.position.y = arm1PivotHeight;
+    MinusXarm1pivot.position.z = 0;
+    MinusXarm1pivot.castShadow = true;
+    scene.add(MinusXarm1pivot);
+
+    var armMesh = new THREE.CubeGeometry(arm1width, arm1Len, arm1width);
+    var armMaterial = new THREE.MeshPhongMaterial({opacity: 0.7, transparent: true, map: THREE.ImageUtils.loadTexture('images/metal.jpg')});
+
+    MinusXarm1 = new Physijs.BoxMesh(armMesh, Physijs.createMaterial(armMaterial));
+    MinusXarm1.position.x = -arm1InitPositionX;
+    MinusXarm1.position.y = arm1PivotHeight - arm1Len/2 - arm1PivotLen;
+    MinusXarm1.position.z = 0;
+    scene.add(MinusXarm1);
+
+    //position is the position of the axis, relative to the ref, based on the current position
+    var constraint = new Physijs.ConeTwistConstraint(MinusXarm1pivot, MinusXarm1, MinusXarm1pivot.position);
+
+    scene.addConstraint(constraint);
+    constraint.setLimit(Math.PI, Math.PI, Math.PI);
+    constraint.setMaxMotorImpulse(1000);
+    constraint.setMotorTarget(new THREE.Vector3(0, 0, 0)); // desired rotation
+
+    return constraint;
+}
+
+var MinusXarm2, MinusXarm2pivot = [];
+function createConeTwistMinusXArm2() {
+    var pivotMesh = new THREE.SphereGeometry(arm1PivotLen);
+    var pivotMaterial = new THREE.MeshPhongMaterial({opacity: 0.7, transparent: true, map: THREE.ImageUtils.loadTexture('images/metal.jpg')});
+
+    MinusXarm2pivot = new Physijs.SphereMesh(pivotMesh, Physijs.createMaterial(pivotMaterial));
+    MinusXarm2pivot.position.z = 0;
+    MinusXarm2pivot.position.x = -arm1InitPositionX;
+    MinusXarm2pivot.position.y = arm1PivotHeight - arm1Len - arm1PivotLen - arm2PivotLen;
+    MinusXarm2pivot.castShadow = true;
+    scene.add(MinusXarm2pivot);
+
+    var armMesh = new THREE.CubeGeometry(arm2width, arm2Len, arm2width);
+    var armMaterial = new THREE.MeshPhongMaterial({opacity: 0.7, transparent: true, map: THREE.ImageUtils.loadTexture('images/metal.jpg')});
+
+    MinusXarm2 = new Physijs.BoxMesh(armMesh, Physijs.createMaterial(armMaterial));
+    MinusXarm2.position.z = 0;
+    MinusXarm2.position.x = -arm1InitPositionX;
+    MinusXarm2.position.y = MinusXarm2pivot.position.y - arm2Len/2 - arm2PivotLen;
+    scene.add(MinusXarm2);
+
+    //position is the position of the axis, relative to the ref, based on the current position
+    var constraint = new Physijs.ConeTwistConstraint(MinusXarm2pivot, MinusXarm2, MinusXarm2pivot.position);
+
+    scene.addConstraint(constraint);
+    constraint.setLimit(Math.PI, Math.PI, Math.PI);
+    constraint.setMaxMotorImpulse(1000);
+    constraint.setMotorTarget(new THREE.Vector3(0, 0, 0)); // desired rotation
+
+    return constraint;
+}
+
+function createPointToPointMinusX() {
+    var arm1Clone = MinusXarm1.clone();
+    arm1Clone.position.y = arm1Clone.position.y - arm1Len/2;
+    var constraint = new Physijs.PointConstraint(MinusXarm1, MinusXarm2pivot, arm1Clone.position);
+    scene.addConstraint(constraint);
+}
+
+
+// Z軸用のデータ生成
+var Zarm1, Zarm1pivot = [];
+function createConeTwistZArm1() {
+    var pivotMesh = new THREE.SphereGeometry(arm1PivotLen);
+    var pivotMaterial = new THREE.MeshPhongMaterial({opacity: 0.7, transparent: true, map: THREE.ImageUtils.loadTexture('images/metal.jpg')});
+
+    Zarm1pivot = new Physijs.SphereMesh(pivotMesh, Physijs.createMaterial(pivotMaterial), 0);
+    Zarm1pivot.position.x = 0;
+    Zarm1pivot.position.y = arm1PivotHeight;
+    Zarm1pivot.position.z = arm1InitPositionZ;
+    Zarm1pivot.castShadow = true;
+    scene.add(Zarm1pivot);
+
+    var armMesh = new THREE.CubeGeometry(arm1width, arm1Len, arm1width);
+    var armMaterial = new THREE.MeshPhongMaterial({opacity: 0.7, transparent: true, map: THREE.ImageUtils.loadTexture('images/metal.jpg')});
+
+    Zarm1 = new Physijs.BoxMesh(armMesh, Physijs.createMaterial(armMaterial));
+    Zarm1.position.x = 0;
+    Zarm1.position.y = arm1PivotHeight - arm1Len/2 - arm1PivotLen;
+    Zarm1.position.z = arm1InitPositionZ;
+    scene.add(Zarm1);
+
+    //position is the position of the axis, relative to the ref, based on the current position
+    var constraint = new Physijs.ConeTwistConstraint(Zarm1pivot, Zarm1, Zarm1pivot.position);
+
+    scene.addConstraint(constraint);
+    constraint.setLimit(Math.PI, Math.PI, Math.PI);
+    constraint.setMaxMotorImpulse(1000);
+    constraint.setMotorTarget(new THREE.Vector3(0, 0, 0)); // desired rotation
+
+    return constraint;
+}
+
+var Zarm2, Zarm2pivot = [];
+function createConeTwistZArm2() {
+    var pivotMesh = new THREE.SphereGeometry(arm1PivotLen);
+    var pivotMaterial = new THREE.MeshPhongMaterial({opacity: 0.7, transparent: true, map: THREE.ImageUtils.loadTexture('images/metal.jpg')});
+
+    Zarm2pivot = new Physijs.SphereMesh(pivotMesh, Physijs.createMaterial(pivotMaterial));
+    Zarm2pivot.position.z = arm1InitPositionZ;
+    Zarm2pivot.position.x = 0;
+    Zarm2pivot.position.y = arm1PivotHeight - arm1Len - arm1PivotLen - arm2PivotLen;
+    Zarm2pivot.castShadow = true;
+    scene.add(Zarm2pivot);
+
+    var armMesh = new THREE.CubeGeometry(arm2width, arm2Len, arm2width);
+    var armMaterial = new THREE.MeshPhongMaterial({opacity: 0.7, transparent: true, map: THREE.ImageUtils.loadTexture('images/metal.jpg')});
+
+    Zarm2 = new Physijs.BoxMesh(armMesh, Physijs.createMaterial(armMaterial));
+    
+    Zarm2.position.x = 0;
+    Zarm2.position.y = Zarm2pivot.position.y - arm2Len/2 - arm2PivotLen;
+    Zarm2.position.z = arm1InitPositionZ;
+ 
+    scene.add(Zarm2);
+
+    //position is the position of the axis, relative to the ref, based on the current position
+    var constraint = new Physijs.ConeTwistConstraint(Zarm2pivot, Zarm2, Zarm2pivot.position);
+
+    scene.addConstraint(constraint);
+    // set limit to quarter circle for each axis
+    // constraint.setLimit(0.5 * Math.PI, 0.5 * Math.PI, 0.5 * Math.PI);
+    // ###mada 単位、Impluseの意味わからず。また、インプットが角度となっている。
+    constraint.setLimit(Math.PI, Math.PI, Math.PI);
+    constraint.setMaxMotorImpulse(1000);
+    constraint.setMotorTarget(new THREE.Vector3(0, 0, 0)); // desired rotation
+
+    return constraint;
+}
+
+function createPointToPointZ() {
+   var arm1Clone = Zarm1.clone();
+    arm1Clone.position.y = arm1Clone.position.y - arm1Len/2;
+    var constraint = new Physijs.PointConstraint(Zarm1, Zarm2pivot, arm1Clone.position);
+    scene.addConstraint(constraint);
+}
+
+function createMovePoint() {
+    var pivotMesh = new THREE.SphereGeometry(arm1PivotLen);
+    var pivotMaterial = new THREE.MeshPhongMaterial({opacity: 0.7, transparent: true, map: THREE.ImageUtils.loadTexture('images/ice.jpg')});
+
+    var MovePoint = new Physijs.SphereMesh(pivotMesh, Physijs.createMaterial(pivotMaterial));
+    MovePoint.position.z = arm1InitPositionZ/2;
+    MovePoint.position.x = 0;
+    MovePoint.position.y = arm1PivotHeight - arm1Len*2;
+    MovePoint.castShadow = true;
+    scene.add(MovePoint);
+
+    var Zarm2Clone = Zarm2.clone();
+    Zarm2Clone.position.y = Zarm2Clone.position.y - arm2Len/2;
+    var Zconstraint = new Physijs.PointConstraint(Zarm2, MovePoint, Zarm2Clone.position);
+    scene.addConstraint(Zconstraint);
+
+    var Xarm2Clone = Xarm2.clone();
+    Xarm2Clone.position.y = Xarm2Clone.position.y - arm2Len/2;
+    var Xconstraint = new Physijs.PointConstraint(Xarm2, MovePoint, Xarm2Clone.position);
+    scene.addConstraint(Xconstraint);
+
+    var MinusXarm2Clone = MinusXarm2.clone();
+    MinusXarm2Clone.position.y = MinusXarm2Clone.position.y - arm2Len/2;
+    var MinusXconstraint = new Physijs.PointConstraint(MinusXarm2, MovePoint, MinusXarm2Clone.position);
+    scene.addConstraint(MinusXconstraint);
+}
+
+render = function () {
+    requestAnimationFrame(render);
+    renderer.render(scene, camera);
+    ceiling.__dirtyRotation = true;
+    scene.simulate(undefined, 2);
+
+    orbitControls.update();
+};
+
+window.onload = initScene;
+
+</script>
+</head>
+
+<body>
+<div id="viewport"></div>
+</body>
+
+</html>

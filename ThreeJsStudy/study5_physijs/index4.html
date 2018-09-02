@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<meta charset = "UTF-8">
+<head>
+
+<title>パラレルリンクロボット</title>
+
+<script type="text/javascript" src="../lib/three.js"></script>
+<script type="text/javascript" src="../lib/physi.js"></script>
+<script type="text/javascript" src="../lib/dat.gui.js"></script>
+<script type="text/javascript" src="../lib/OrbitControls.js"></script>
+<script type="text/javascript">
+
+'use strict';
+
+Physijs.scripts.worker = '../lib/physijs_worker.js';
+Physijs.scripts.ammo = '../lib/ammo.js';
+
+var initScene, render, ceiling_material, renderer, scene, ceiling, light, camera = [];
+var armL1 = 10;
+var armL2 = 12;
+var ceilingHeight = 30;
+
+initScene = function () {
+    //renderer
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    renderer.setClearColorHex(0x000000);
+    renderer.shadowMapEnabled = true;
+
+    document.getElementById('viewport').appendChild(renderer.domElement);
+
+    //scene
+    scene = new Physijs.Scene({reportSize: 10, fixedTimeStep: 1 / 60});
+    scene.setGravity(new THREE.Vector3(0, -10, 0));
+
+    // //camera
+    // camera = new THREE.PerspectiveCamera(
+    //         35,
+    //         window.innerWidth / window.innerHeight,
+    //         1,
+    //         1000
+    // );
+    // camera.position.set(-100, -100, -100);
+    // camera.lookAt(new THREE.Vector3(0, 0, 0));
+    // scene.add(camera);
+
+    // // Light
+    // light = new THREE.SpotLight(0xFFFFFF);
+    // light.position.set(20, ceilingHeight+1, 50);
+    // light.castShadow = true;
+    // light.shadowMapDebug = true;
+    // light.shadowCameraNear = 10;
+    // light.shadowCameraFar = 100;
+    // scene.add(light);
+
+
+    //camera
+    camera = new THREE.PerspectiveCamera(
+            35,
+            window.innerWidth / window.innerHeight,
+            1,
+            1000
+    );
+    camera.position.set(85, 65, 65);
+    camera.lookAt(new THREE.Vector3(0, 0, 0));
+    scene.add(camera);
+
+    // Light
+    light = new THREE.SpotLight(0xFFFFFF);
+    light.position.set(20, 50, 50);
+    light.castShadow = true;
+    light.shadowMapDebug = true;
+    light.shadowCameraNear = 10;
+    light.shadowCameraFar = 100;
+    scene.add(light);
+
+    // control
+    var orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
+
+    //object
+    createCeiling();
+    var flipperConstraint = createFlipper();
+    var coneTwistConstraint = createConeTwist();
+
+    var controls = new function () {
+        this.enableMotor = false;
+        this.acceleration = 2;
+        this.velocity = -10;
+
+        this.enableConeTwistMotor = false;
+        this.motorTargetX = 0;
+        this.motorTargetY = 0;
+        this.motorTargetZ = 0;
+
+        this.updateCone = function () {
+            if (controls.enableConeTwistMotor) {
+                coneTwistConstraint.enableMotor();
+                coneTwistConstraint.setMotorTarget(new THREE.Vector3(controls.motorTargetX, controls.motorTargetY, controls.motorTargetZ));
+            } else {
+                coneTwistConstraint.disableMotor();
+            }
+
+        }
+
+        this.updateMotor = function () {
+            if (controls.enableMotor) {
+                // velocity is the velocity we are going for.
+                // acceleration is how fast we're going to reach it
+                flipperConstraint.disableMotor();
+                flipperConstraint.enableAngularMotor(-1 * controls.velocity, controls.acceleration);
+            } else {
+                flipperConstraint.disableMotor();
+            }
+        }
+    }
+
+    controls.updateMotor();
+
+    // GUI
+    var gui = new dat.GUI();
+    var generalFolder = gui.addFolder('general');
+    generalFolder.add(controls, "acceleration", 0, 15).onChange(controls.updateMotor);
+    generalFolder.add(controls, "velocity", -10, 10).onChange(controls.updateMotor);
+
+    var hingeFolder = gui.addFolder('hinge');
+    hingeFolder.add(controls, "enableMotor").onChange(controls.updateMotor);
+
+    var coneTwistFolder = gui.addFolder('coneTwist');
+    coneTwistFolder.add(controls, "enableConeTwistMotor").onChange(controls.updateCone);
+    coneTwistFolder.add(controls, "motorTargetX", -Math.PI / 2, Math.PI / 2).onChange(controls.updateCone);
+    coneTwistFolder.add(controls, "motorTargetY", -Math.PI / 2, Math.PI / 2).onChange(controls.updateCone);
+    coneTwistFolder.add(controls, "motorTargetZ", -Math.PI / 2, Math.PI / 2).onChange(controls.updateCone);
+
+    requestAnimationFrame(render);
+    scene.simulate();
+};
+
+function createCeiling() {
+    //###mada ceiling にすると、光が入らなくなる。
+    // Materials
+    ceiling_material = Physijs.createMaterial(
+            new THREE.MeshPhongMaterial(
+                    {
+                        map: THREE.ImageUtils.loadTexture('images/wood.jpg')
+                    }),
+            .9, // high friction
+            .7 // low restitution
+    );
+
+    // Ceiling
+    ceiling = new Physijs.BoxMesh(
+            new THREE.CubeGeometry(60, 1, 60),
+            ceiling_material,
+            0
+    );
+    ceiling.receiveShadow = true;
+
+    scene.add(ceiling);
+}
+
+function createConeTwist() {
+    var baseMesh = new THREE.SphereGeometry(1);
+    var armMesh = new THREE.CubeGeometry(2, armL2, 2);
+
+    var objectOne = new Physijs.BoxMesh(baseMesh, Physijs.createMaterial(
+            new THREE.MeshPhongMaterial({color: 0x4444ff, transparent: true, opacity: 0.7}), 0, 0), 0);
+    objectOne.position.z = 0;
+    objectOne.position.x = 20;
+    objectOne.position.y = 15.5;
+    objectOne.castShadow = true;
+    scene.add(objectOne);
+
+
+    var objectTwo = new Physijs.SphereMesh(armMesh, Physijs.createMaterial(
+            new THREE.MeshPhongMaterial({color: 0x4444ff, transparent: true, opacity: 0.7}), 0, 0), 10);
+    objectTwo.position.z = 0;
+    objectTwo.position.x = 20;
+    objectTwo.position.y = 7.5;
+    scene.add(objectTwo);
+
+    objectTwo.castShadow = true;
+
+    //position is the position of the axis, relative to the ref, based on the current position
+    var constraint = new Physijs.ConeTwistConstraint(objectOne, objectTwo, objectOne.position);
+
+    scene.addConstraint(constraint);
+    // set limit to quarter circle for each axis
+    constraint.setLimit(0.5 * Math.PI, 0.5 * Math.PI, 0.5 * Math.PI);
+    constraint.setMaxMotorImpulse(1);
+    constraint.setMotorTarget(new THREE.Vector3(0, 0, 0)); // desired rotation
+
+    return constraint;
+}
+
+function createFlipper() {
+    //arm1
+    var arm1Material = new THREE.MeshPhongMaterial({opacity: 0.7, transparent: true});
+    var arm1 = new Physijs.BoxMesh(
+//            new THREE.CubeGeometry(armL1, 2, 2), Physijs.createMaterial(new THREE.MeshPhongMaterial(
+                new THREE.CubeGeometry(2, armL1, 2), Physijs.createMaterial(arm1Material, 0.3));
+    arm1.position.x = 15;
+    arm1.position.y = ceilingHeight - armL1/2 - 1;
+    arm1.position.z = 0;
+
+    arm1.castShadow = true;
+    scene.add(arm1);
+
+
+    //###mada 回転角と見栄えを合わせようとすると、物体消える。    
+//    var arm1Pivot = new Physijs.CylinderMesh(new THREE.CylinderGeometry(1,1,1), Ceiling_material, 0);
+    var arm1Pivot = new Physijs.SphereMesh(new THREE.SphereGeometry(1) , arm1Material, 0);
+    arm1Pivot.position.x = 15;
+    arm1Pivot.position.y = ceilingHeight;
+    arm1Pivot.position.z = 0;
+    //arm1Pivot.rotation.z = Math.PI/2;
+    arm1Pivot.castShadow = true;
+
+    scene.add(arm1Pivot);
+
+    // when looking at the axis, the axis of object two are used.
+    // so as long as that one is the same as the scene, no problems
+    // rotation and axis are relative to object2. If position == cube2.position it works as expected
+    var constraint = new Physijs.HingeConstraint(arm1, arm1Pivot, arm1Pivot.position, new THREE.Vector3(1, 0, 0));
+    // var constraint = new Physijs.HingeConstraint(arm1, arm1Pivot, arm1Pivot.position, new THREE.Vector3(0, 1, 0));
+    scene.addConstraint(constraint);
+
+    constraint.setLimits(
+            2.2, // minimum angle of motion, in radians, from the point object 1 starts (going back)
+            0.6, // maximum angle of motion, in radians, from the point object 1 starts (going forward)
+            0.1, // applied as a factor to constraint error, how big the kantelpunt is moved when a constraint is hit
+            0 // controls bounce at limit (0.0 == no bounce)
+    );
+    return constraint;
+}
+
+var direction = 1;
+
+render = function () {
+    requestAnimationFrame(render);
+    renderer.render(scene, camera);
+    ceiling.__dirtyRotation = true;
+    scene.simulate(undefined, 2);
+
+    orbitControls.update();
+};
+
+
+window.onload = initScene;
+
+</script>
+</head>
+
+<body>
+<div id="viewport"></div>
+</body>
+
+</html>
