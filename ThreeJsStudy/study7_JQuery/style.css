@@ -1,0 +1,181 @@
+
+*,
+*:after,
+*:before {
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	padding: 0;
+	margin: 0;
+}
+
+.clearfix:after {
+	content: "";
+	display: table;
+	clear: both;
+}
+
+.wrapper {
+	position: relative;
+	max-width: 600px;
+	width: 100%;
+	padding: 0 50px;
+	margin: 0 auto;
+}
+
+.sb-description h4 {
+	font-size: 20px;
+	text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+}
+
+
+.nav-arrows a {
+	width: 42px;
+	height: 42px;
+	background: #cbbfae url(img/system/nav.png) no-repeat top left;
+	position: absolute;
+	top: 50%;
+	left: 2px;
+	text-indent: -9000px;
+	cursor: pointer;
+	margin-top: -21px;
+	opacity: 0.9;
+	border-radius: 50%;
+	box-shadow: 0 1px 1px rgba(255,255,255,0.8);
+}
+
+.nav-arrows a:first-child{
+	left: auto;
+	right: 2px;
+	background-position: top right;
+}
+.nav-arrows a:hover {
+	opacity: 1;
+}
+
+
+#baseBlock1{/*コンテンツ全体の設定*/
+	font-family:Verdana, "Tahoma,Arial,sans-serif,ＭＳ Ｐゴシック",MS UI Gothic, Osaka;/*フォントの設定*/
+	color:#aaa;             		/*文字色の設定*/
+	margin-left:auto;       		/*センタリングのための左の余白*/
+	margin-right:auto;      		/*センタリングのための右の余白*/
+	width:800px;	        		/*コンテンツ全体の幅*/
+	text-align:left;	        	/*IEセンタリングバグ回避用。*/
+	font-size: 0.82em;      		/*文字サイズ。
+		文字サイズはInternet Explorerの文字のサイズ－中、Firefoxの文字サイズ－標準サイズに合わせてあります。*/
+}
+/******************************************/
+#title{/*タイトル部分*/
+	margin-left:10px;
+	width:790px; 		  	    	/*タイトル部分の幅*/
+	height:50px;       		    	/*タイトル部分の高さ*/
+	background:url(img/system/01.jpg) no-repeat;	/*タイトル部分の背景設定*/
+	border:1px solid #666;/*枠線の設定*/
+	}
+
+/******************************************/
+h1{/*タイトル部分のフォント、文字位置の設定*/
+	font-size:1.7em;		/*タイトル文字の大きさ 1emでbaseBlock1のfont-sizeと同じ大きさになります*/
+	color:#fff;		    	/*タイトル文字の色*/
+	padding-top:10px;		/*文字上側の余白*/
+	padding-left:50px;		/*文字左側の余白*/
+	margin:0px;		    	/*Firefoxでの余分な余白を削除*/
+	}
+
+
+/******************************************/
+#main{/*メインコンテンツ部分の位置設定*/
+	width:570;			/*メインコンテンツの幅*/
+	float:right;			/*メインコンテンツ位置設定*/
+	padding-top:30px;		/*文字上部の余白*/
+	padding-bottom:30px;		/*フッターとの間隔*/
+	}
+/******************************************/
+#maintext{/*IEとfirefoxのズレ対策用*/
+	padding-left:30px;	/*文字左側の余白。*/
+
+	}
+/******************************************/
+h3{/*見出しの設定*/
+	border-bottom:1px solid #acf;	/*下に枠線*/
+	border-left:4px solid #acf;	/*右に枠線*/
+	padding-left:4px;		/*左に余白*/
+	font-size:1.1em;		/*文字サイズ*/
+	font-weight:normal;		/*文字の太さ*/}
+/******************************************/
+h4{
+	color:#fff;		/*文字色*/
+	padding-top:0px;	/*上に余白*/
+	padding-right:50px;	/*右に余白*/
+	font-size:1.0em;	/*文字サイズ*/
+	margin:0px;		/*余白の設定*/
+	font-weight:normal;	/*文字の太さ*/
+	}
+
+#menu{/*メニュー部分の設定。*/
+	width:219px;       	/*メニューの幅*/
+	float:left;    		/*メニュー位置設定*/
+	font-size:0.9em;	/*メニューの文字サイズ*/
+	text-align:center;	/*文字位置の設定left もしくは center もしくは right*/
+	padding-top:30px;	/*上に余白*/
+	}
+/******************************************/
+#me-top{/*メニュー上部画像用*/
+	height:32px;/*高さ*/
+	background:url(img/system/02t.jpg)  no-repeat;	/*背景の設定*/
+}
+/******************************************/
+#me-mid{/*メニュー中部画像用*/
+	background:url(img/system/03.jpg) repeat-y;	/*背景の設定*/}
+/******************************************/
+#me-bot{/*メニュー下部画像用*/
+	height:32px;				/*高さ*/
+	background:url(img/system/04b.jpg) no-repeat;	/*背景の設定*/}
+/******************************************/
+#menutext{/*IEとfirefoxのズレ対策用*/
+	padding-left:10px;	/*左の余白設定*/
+	}
+/******************************************/
+.m-title{/*メニュータイトルの設定。*/
+	height:20px;      		/*高さ*/
+	font-size:1.2em;	        /*テキストサイズ*/
+	border:1px solid #666;		/*枠線の設定*/
+	color:#aaa;			/*テキスト色*/
+	background:#fff url(img/system/05.jpg) no-repeat;
+	margin-top:0px;			/*上部に余白*/	        
+	margin-left:10px;		/*左に余白*/
+	margin-right:22px;		/*右に余白*/
+	margin-bottom:5px;		/*下に余白*/
+	}
+/******************************************/
+#footer a{	            	/*ページ下部のリンクテキストのフォント設定*/
+	color:#777;            	/*テキスト色*/
+	text-decoration:none;	/*下線の設定*/
+	}
+/******************************************/
+#footer{/*ページ下部の設定*/
+	clear:both;	      		/*floatによるメインコンテンツとメニュー分割の終了*/
+	wigth:850px;			/*ページ下部の幅*/
+	text-align:center;		/*フッター文字を中心に配置*/
+	color:#777;		    	/*テキスト色*/
+	font-size:0.8em;		/*テキストの大きさ*/
+	border-top:solid 0px #999;	/*メインコンテンツとの境界線*/
+	}
+/******************************************/
+a img{/*画像リンクの設定　余分な物を削除してあります*/
+	border-style : none;
+	border-width : 0px;	
+	text-decoration : none;
+	}
+/******************************************/
+
+html{/*スクロールバーの色の設定。Internet Explorerのみ適用されます*/
+	scrollbar-face-color: #fff;	    	/* バーの色 */
+	scrollbar-3dlight-color: #eee; 		/* 左上外側ライン */
+	scrollbar-highlight-color: #ddd;	/* 左上内側ライン */
+	scrollbar-shadow-color: #ccc;		/* 右下内側ライン */
+	scrollbar-darkshadow-color: #bbb;	/* 右下外側ライン */
+	scrollbar-arrow-color: #ccc;		/* 矢印 */
+	scrollbar-track-color: #fff;		/* トラック部分 */
+}
+/******************************************/

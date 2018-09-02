@@ -1,0 +1,26 @@
+table {
+	background-color: #ffffff;
+	border-top:#ffffff 3px double;
+	border-collapse: collapse;
+	font-size: 11px;
+	width: 100%;
+	color:#333333;
+} 
+table th.t_top {
+	border-bottom: #dcdddd 1px solid;
+	background-color: #efefef;
+	text-align: left;
+	padding: 10px;
+} 
+table td.t_line01 {
+	background-color: #fff;
+	text-align: left;
+	padding: 10px;
+	vertical-align: top;
+}
+table td.t_line02 {
+	background-color: #f7f8f8;
+	text-align: left;
+	padding: 10px;
+	vertical-align: top;
+}
