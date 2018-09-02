@@ -1,0 +1,3 @@
+#include "myresource.h" 
+IDR_CALCCOMP2   REGISTRY  "CalcObject2.rgs" 
+1 TYPELIB "DEBUG\CalcComp2.tlb" 

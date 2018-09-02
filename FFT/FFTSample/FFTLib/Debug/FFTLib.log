@@ -1,0 +1,18 @@
+﻿2015/05/23 21:56:57 にビルドを開始しました。
+     1>ノード 2 上のプロジェクト "E:\Github\Study\FFT\FFTSample\FFTLib\FFTLib.vcxproj" (Rebuild ターゲット)。
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yc"stdafx.h" /Fp"Debug\FFTLib.pch" /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt stdafx.cpp
+         stdafx.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"stdafx.h" /Fp"Debug\FFTLib.pch" /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt FFT.cpp
+         FFT.cpp
+     1>e:\github\study\fft\fftsample\fftlib\fft.cpp(67): warning C4018: '<' : signed と unsigned の数値を比較しようとしました。
+     1>e:\github\study\fft\fftsample\fftlib\fft.cpp(84): warning C4018: '<' : signed と unsigned の数値を比較しようとしました。
+       Lib:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\Lib.exe /OUT:"E:\Github\Study\FFT\FFTSample\Debug\FFTLib.lib" /NOLOGO Debug\FFT.obj
+         Debug\stdafx.obj
+         FFTLib.vcxproj -> E:\Github\Study\FFT\FFTSample\Debug\FFTLib.lib
+     1>プロジェクト "E:\Github\Study\FFT\FFTSample\FFTLib\FFTLib.vcxproj" (Rebuild ターゲット) のビルドが完了しました。
+
+ビルドに成功しました。
+
+経過時間 00:00:00.51

@@ -1,0 +1,23 @@
+HKCR
+{
+	CalcCompExe.CalcTest.1 = s 'CalcTest Class'
+	{
+		CLSID = s '{32012854-523C-4822-9472-744D32FD3889}'
+	}
+	CalcCompExe.CalcTest = s 'CalcTest Class'
+	{
+		CLSID = s '{32012854-523C-4822-9472-744D32FD3889}'
+		CurVer = s 'CalcCompExe.CalcTest.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {32012854-523C-4822-9472-744D32FD3889} = s 'CalcTest Class'
+		{
+			ProgID = s 'CalcCompExe.CalcTest.1'
+			VersionIndependentProgID = s 'CalcCompExe.CalcTest'
+			ForceRemove 'Programmable'
+			LocalServer32 = s '%MODULE%'
+			'TypeLib' = s '{4C0D0DFD-E94E-4C1B-BFB6-5FB409C95ECE}'
+		}
+	}
+}

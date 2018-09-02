@@ -1,0 +1,44 @@
+import "oaidl.idl";
+import "ocidl.idl";
+ 
+[ 
+    object, 
+    uuid(4341CDB6-AF0F-4ef4-9C51-0BAFFE845FF4)
+] 
+interface ICalcObject2 : IUnknown{               //Å©[2] 
+    HRESULT Add([in] int op1, [in] int op2, [out,retval] int* ret);  
+    HRESULT GetAddedStaticValue([out,retval] int* ret);  
+}; 
+ 
+[ 
+    uuid(9665C0C7-4EA9-4ee6-A950-43C985A74757),  //Å©[3] 
+    version(1.0), 
+] 
+library CalcComp2Lib  //Å©[4] 
+{ 
+    [ 
+        uuid(6E805751-5B02-4c1b-BF9D-FD69C07AF2FA)  //Å©[5] 
+    ] 
+    coclass CalcObject2                             //Å©[6] 
+    { 
+        [default] interface ICalcObject2;           //Å©[7] 
+    }; 
+}; 
+
+
+// {4341CDB6-AF0F-4ef4-9C51-0BAFFE845FF4}
+//static const GUID <<name>> = 
+//{ 0x4341cdb6, 0xaf0f, 0x4ef4, { 0x9c, 0x51, 0xb, 0xaf, 0xfe, 0x84, 0x5f, 0xf4 } };
+
+// {9665C0C7-4EA9-4ee6-A950-43C985A74757}
+//static const GUID <<name>> = 
+//{ 0x9665c0c7, 0x4ea9, 0x4ee6, { 0xa9, 0x50, 0x43, 0xc9, 0x85, 0xa7, 0x47, 0x57 } };
+
+// {6E805751-5B02-4c1b-BF9D-FD69C07AF2FA}
+//static const GUID <<name>> = 
+//{ 0x6e805751, 0x5b02, 0x4c1b, { 0xbf, 0x9d, 0xfd, 0x69, 0xc0, 0x7a, 0xf2, 0xfa } };
+
+
+
+
+

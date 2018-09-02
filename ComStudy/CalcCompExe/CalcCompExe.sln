@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CalcCompExe", "CalcCompExe\CalcCompExe.vcproj", "{73533DC6-F592-4760-8F9F-E708C03ACFD8}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CalcCompExePS", "CalcCompExe\CalcCompExePS.vcproj", "{C89D5FD1-4596-4C7E-B72A-94303D9103D6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{73533DC6-F592-4760-8F9F-E708C03ACFD8} = {73533DC6-F592-4760-8F9F-E708C03ACFD8}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{73533DC6-F592-4760-8F9F-E708C03ACFD8}.Debug|Win32.ActiveCfg = Debug|Win32
+		{73533DC6-F592-4760-8F9F-E708C03ACFD8}.Debug|Win32.Build.0 = Debug|Win32
+		{73533DC6-F592-4760-8F9F-E708C03ACFD8}.Release|Win32.ActiveCfg = Release|Win32
+		{73533DC6-F592-4760-8F9F-E708C03ACFD8}.Release|Win32.Build.0 = Release|Win32
+		{C89D5FD1-4596-4C7E-B72A-94303D9103D6}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C89D5FD1-4596-4C7E-B72A-94303D9103D6}.Release|Win32.ActiveCfg = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

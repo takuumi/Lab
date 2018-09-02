@@ -1,0 +1,38 @@
+// CalcCompExe.idl : CalcCompExe の IDL ソース
+//
+
+// このファイルは、タイプ ライブラリ (CalcCompExe.tlb) およびマーシャリング コードを
+// 作成するために MIDL ツールによって処理されます。
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+	object,
+	uuid(3B983EC8-6C95-4D8D-95C9-5EDB76EA5017),
+	dual,
+	nonextensible,
+	helpstring("ICalcTest インターフェイス"),
+	pointer_default(unique)
+]
+interface ICalcTest : IDispatch{
+	[id(1), helpstring("メソッド Add")] HRESULT Add([in] LONG a, [in] LONG b, [out] LONG* ret);
+	[id(2), helpstring("メソッド GetAddedStaticValue")] HRESULT GetAddedStaticValue([out] LONG* ret);
+};
+[
+	uuid(4C0D0DFD-E94E-4C1B-BFB6-5FB409C95ECE),
+	version(1.0),
+	helpstring("CalcCompExe 1.0 タイプ ライブラリ")
+]
+library CalcCompExeLib
+{
+	importlib("stdole2.tlb");
+	[
+		uuid(32012854-523C-4822-9472-744D32FD3889),
+		helpstring("CalcTest Class")
+	]
+	coclass CalcTest
+	{
+		[default] interface ICalcTest;
+	};
+};
