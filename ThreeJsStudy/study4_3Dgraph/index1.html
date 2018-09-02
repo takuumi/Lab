@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>線を使った3Dグラフ</title>
+<script src="../lib/Three.js"></script>
+
+<style>
+div#canvas-frame{
+	border: none;
+	cursor: pointer;
+	width: 400px;
+	height: 400px;
+	background-color: #FFFFFF;
+}
+</style>
+<script>
+	var width, height;
+	var renderer;
+	function initThree() {
+		width = document.getElementById('canvas-frame').clientWidth;
+		height = document.getElementById('canvas-frame').clientHeight;		
+		try {renderer = new THREE.WebGLRenderer({antialias: true});} catch (e) {}	
+		if(!renderer) document.getElementById("errer").innerHTML = '<p style="text-align:center;font-size:small; color:red">/></p>';
+		renderer.setSize(width, height);
+		document.getElementById('canvas-frame').appendChild(renderer.domElement);
+		renderer.setClearColorHex(0xFFFFFF, 1.0);
+	}
+	var camera;
+	function initCamera() {	
+		camera = new THREE.PerspectiveCamera( 45 , width / height , 1 , 10000 );
+		camera.up.x = 0;
+		camera.up.y = 0;
+		camera.up.z = 1;
+		camera.position.set(600,0, 100);
+	}
+	var scene;
+	function initScene() {		
+		scene = new THREE.Scene();
+	}
+	var light, light2;
+	function initLight() {	
+		light = new THREE.DirectionalLight(0xFFFFFF, 1.0, 0);
+		light.position.set( 20, 20, 1000 );
+		light.castShadow = true;
+		scene.add(light);
+		
+		light2 = new THREE.AmbientLight(0x777777);
+		scene.add(light2);		
+	}
+	var plane;
+	function initObject(){
+		//床の描画
+		var yuka_n = 10, yuka_w = 50;//床の個数とサイズ
+		for(var i=-yuka_n; i<=yuka_n ; i++){
+			for(var j=-yuka_n; j<=yuka_n ; j++){
+				if((i+j)%2==0) var plane = new THREE.Mesh(
+							new THREE.PlaneGeometry(yuka_w, yuka_w, 5, 5), 
+							new THREE.MeshLambertMaterial({color: 0x999999, ambient:0x050505}));
+				else var plane = new THREE.Mesh(
+							new THREE.PlaneGeometry(yuka_w, yuka_w, 5, 5), 
+							new THREE.MeshLambertMaterial({color: 0x4d4d4d, ambient:0x050505}));
+				plane.position.x = j*yuka_w;
+				plane.position.y = i*yuka_w;
+				plane.receiveShadow = true;
+				scene.add(plane);
+			}
+		}
+	}
+
+	var dataSet = [];
+	dataSet[0] = [50, 100, 200, 300, 400, 100, 500, 600, 0, 100, 200, 300, 400, 100, 500, 600]
+	var geometry = new THREE.Geometry();
+	geometry.vertices.push( new THREE.Vector3(  0, 0 , 0)  );
+
+	var r = 0;
+	function loop() {
+		for(var i=1; i<=1000; i++ ) ;
+		//2点間の線を引く
+		// var geometry = new THREE.Geometry();
+		  // geometry.vertices.push( new THREE.Vector3(  0, 0 , 0)  );
+		  // geometry.vertices.push( new THREE.Vector3(  100, 100, 100 ) );
+		  // geometry.vertices.push( new THREE.Vector3(  -200, 20, 10 ) );
+		if (r < dataSet[0].length) {
+			geometry.vertices.push( new THREE.Vector3( dataSet[0][r], dataSet[0][r], dataSet[0][r]));
+			geometry.verticesNeedUpdate = true;
+			geometry.buffersNeedUpdate = true;
+
+			//geometry.vertices.push( new THREE.Vector3(0, 0, 0));
+			//geometry.vertices.push( new THREE.Vector3(100, 100, 100));
+		} else {
+			r = 0;
+			//geometry.vertices.remove();
+			var _max = geometry.vertices.length;
+			for (var i = 0; i < _max; i++) {
+				geometry.vertices.pop();
+			}
+		}
+
+		var geometryTmp = geometry.clone();
+		var line = new THREE.Line( geometryTmp, new THREE.LineBasicMaterial( { color: "0x000000", linewidth: 1} ) );
+		scene.add( line );//シーンに追加		
+		
+		camera.lookAt( {x:0, y:0, z:100 } );		
+		renderer.clear();
+		renderer.render(scene, camera);
+		//シーンから削除
+		scene.remove( line );
+		r++;
+
+
+		window.requestAnimationFrame(loop);
+	}
+
+	function threeStart() {
+		initThree();
+		initCamera();
+		initScene();		
+		initLight();
+		initObject();
+		loop();
+	}
+	
+</script>
+</head>
+
+<body onload="threeStart();">
+<br />
+<div id="errer"></div>
+<div id="canvas-frame"></div>
+
+</body>
+</html>

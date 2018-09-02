@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>線を使った3Dグラフ</title>
+<script src="../lib/three.min.js"></script>
+<script src="../lib/OrbitControls.js"></script>
+<script src="../lib/jquery-1.11.1.min.js"></script>
+<script src="../lib/jquery_csv.js"></script>
+
+<style>
+div#canvas-frame{
+	border: none;
+	cursor: pointer;
+	width: 400px;
+	height: 400px;
+	background-color: #FFFFFF;
+}
+</style>
+<script>
+	var width, height;
+	var renderer;
+	function initThree() {
+		width = document.getElementById('canvas-frame').clientWidth;
+		height = document.getElementById('canvas-frame').clientHeight;		
+		try {renderer = new THREE.WebGLRenderer({antialias: true});} catch (e) {}	
+		if(!renderer) document.getElementById("errer").innerHTML = '<p style="text-align:center;font-size:small; color:red">/></p>';
+		renderer.setSize(width, height);
+		document.getElementById('canvas-frame').appendChild(renderer.domElement);
+		renderer.setClearColorHex(0xFFFFFF, 1.0);
+	}
+	var camera;
+	function initCamera() {	
+		camera = new THREE.PerspectiveCamera( 45 , width / height , 1 , 10000 );
+		camera.up.x = 0;
+		camera.up.y = 0;
+		camera.up.z = 1;
+		camera.position.set(600,400, 100);
+	}
+
+	var controls
+	function initOrbitControls() {	
+		controls = new THREE.OrbitControls(camera, renderer.domElement);
+	}
+
+	var scene;
+	function initScene() {		
+		scene = new THREE.Scene();
+	}
+	var light, light2;
+	function initLight() {	
+		light = new THREE.DirectionalLight(0xFFFFFF, 1.0, 0);
+		light.position.set( 1000, 1000, 1000 );
+		light.castShadow = true;
+		scene.add(light);
+		
+		// light2 = new THREE.AmbientLight(0x777777);
+		light2 = new THREE.AmbientLight(0xAAAAAA);
+		scene.add(light2);		
+	}
+	var plane;
+	var sphere;
+	function initObject(){
+		var sGeometry = new THREE.SphereGeometry(5);
+		var sMaterial = new THREE.MeshLambertMaterial( {color: 0xff0000});
+		sphere = new THREE.Mesh(sGeometry, sMaterial);
+		sphere.position.set(0,0,0);
+		scene.add(sphere);
+
+		// helper
+		var axis = new THREE.AxisHelper(1000);
+		axis.position.set(0,0,0);
+		scene.add(axis);
+
+	}
+
+	// loop処理
+	var geometry = new THREE.Geometry();
+	var maxPoint;
+	var onlyfirst = true;
+	var r = 0;
+
+	// csvデータの読み込み
+	var dataset = [];
+	$(function(){
+		$.get('data/data.csv',function(data){
+			var csv = $.csv()(data);
+			/*
+			$(csv).each(function(){
+				if(this[0] && this[1] && this[2]){
+					dataset.push([this[0], this[1], this[2]]);
+				}
+			})
+			*/
+			for (var i = 0; i < csv.length; i++) {
+				dataset.push([csv[i][0], csv[i][1], csv[i][2]]);
+			}
+			maxPoint = dataset.length;
+
+			// 読み込み処理完了後、loop処理開始
+			loop();
+
+		})
+	})
+
+	function loop() {
+
+		if (r < maxPoint && onlyfirst) {
+
+			x = dataset[r][0];
+			y = dataset[r][1];
+			z = dataset[r][2];
+
+			geometry.vertices.push( new THREE.Vector3( x, y, z));
+			geometry.verticesNeedUpdate = true;
+			geometry.buffersNeedUpdate = true;
+
+			sphere.position.set(x,y,z);
+
+		} else {
+			onlyfirst = false;
+			r = 0;
+			//geometry.vertices.remove();
+			for (var i = 0; i < geometry.vertices.length; i++) {
+				geometry.vertices.pop();
+			}
+		}
+
+		var geometryTmp = geometry.clone();
+		var line = new THREE.Line( geometryTmp, new THREE.LineDashedMaterial( { color: 0xffaa00, dashSize: 3, gapSize: 1, linewidth: 2 } ) );
+		scene.add( line );//シーンに追加		
+		
+
+		camera.lookAt( {x:0, y:0, z:100 } );		
+		renderer.clear();
+		renderer.render(scene, camera);
+		//シーンから削除
+		scene.remove( line );
+		r++;
+
+		Sleep(0.1);
+		window.requestAnimationFrame(loop);
+	}
+
+	function threeStart() {
+		initThree();
+		initCamera();
+		initOrbitControls();
+		initScene();		
+		initLight();
+		initObject();
+		// loop();
+	}
+	
+	function Sleep( T ){ 
+	   var d1 = new Date().getTime(); 
+	   var d2 = new Date().getTime(); 
+	   while( d2 < d1+1000*T ){    //T秒待つ 
+	       d2=new Date().getTime(); 
+	   } 
+	   return; 
+	} 
+
+</script>
+</head>
+
+<body onload="threeStart();">
+<br />
+<div id="errer"></div>
+<div id="canvas-frame"></div>
+
+</body>
+</html>
